@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include <assert.h>
-
+#include "misc.h"
 #include "nx_event.h"
 
 struct nxd_socket;
@@ -46,38 +46,28 @@ void nxd_socket_finalize(nxd_socket* ss, int good);
 
 #ifdef WITH_SSL
 
-#include <gnutls/gnutls.h>
+typedef struct nxd_ssl_socket nxd_ssl_socket;
 
-typedef struct nxd_ssl_socket { // extends nxd_socket
+#include <openssl/ssl.h>
+
+struct nxd_ssl_socket {  // extends nxd_socket
   const nxd_socket_class* cls;
   nxe_fd_source fs;
   nxe_istream handshake_stub_is;
   nxe_ostream handshake_stub_os;
   nxe_istream* saved_is;
   nxe_ostream* saved_os;
-  gnutls_session_t session;
+  SSL* ssl;
   nxe_ssize_t buffered_size;
   _Bool handshake_started:1;
   _Bool handshake_complete:1;
   _Bool handshake_failed:1;
 } nxd_ssl_socket;
 
-void nxd_ssl_server_socket_init(nxd_ssl_socket* ss, gnutls_certificate_credentials_t x509_cred,
-        gnutls_priority_t priority_cache, gnutls_datum_t* session_ticket_key);
+void nxd_ssl_server_socket_init(nxd_ssl_socket* ss, SSL_CTX* ctx);
 void nxd_ssl_server_socket_finalize(nxd_ssl_socket* ss, int good);
 
-int nxd_ssl_socket_init_server_parameters(gnutls_certificate_credentials_t* x509_cred,
-        gnutls_dh_params_t* dh_params, gnutls_priority_t* priority_cache, gnutls_datum_t* session_ticket_key,
-        const char* cert_file, const char* key_file, const char* dh_file, const char* cipher_priority_string);
-void nxd_ssl_socket_finalize_server_parameters(gnutls_certificate_credentials_t x509_cred, gnutls_dh_params_t dh_params,
-        gnutls_priority_t priority_cache, gnutls_datum_t* session_ticket_key);
-
-int nxd_ssl_socket_global_init(void);
-void nxd_ssl_socket_global_finalize(void);
-
-#endif // WITH_SSL
-
-
+#endif  // WITH_SSL
 
 typedef struct nxd_ibuffer {
   nxb_buffer* nxb;

@@ -217,11 +217,8 @@ typedef struct nxweb_server_listen_config {
   int listen_fd;
   _Bool secure:1;
 #ifdef WITH_SSL
-  gnutls_certificate_credentials_t x509_cred;
-  gnutls_priority_t priority_cache;
-  gnutls_dh_params_t dh_params;
-  gnutls_datum_t session_ticket_key;
-#endif // WITH_SSL
+  SSL_CTX* ctx;
+#endif  // WITH_SSL
 } nxweb_server_listen_config;
 
 struct nxweb_server_config {

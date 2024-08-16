@@ -4,28 +4,56 @@
 # Their paths are defined in config.h (relative to work_dir):
 #   define SSL_CERT_FILE "ssl/server_cert.pem"
 #   define SSL_KEY_FILE "ssl/server_key.pem"
-#   define SSL_DH_PARAMS_FILE "ssl/dh.pem"
 
-# Make sure gnutls bin folder is in PATH
-# GNUTLS v.3.0.12+ is strongly recommended
+# Make sure openssl bin folder is in PATH
+# OpenSSL v.3.0.0+ is strongly recommended
 
-#GNUTLS_BIN_DIR=/opt/gnutls-3.0/bin/
+#OPENSSL_BIN_DIR=/usr/bin/
+CA_CFG=ssl/ca.cfg
+CA_KEY=ssl/ca_key.pem
+CA_CERT=ssl/ca_cert.pem
 
-# Generate self-signed certificate for certificate authority, that shall sign other certificates
+SERVER_CFG=ssl/server.cfg
+SERVER_KEY=ssl/server_key.pem
+SERVER_CERT=ssl/server_cert.pem
 
-${GNUTLS_BIN_DIR}certtool --generate-privkey --outfile ssl/ca_key.pem
-${GNUTLS_BIN_DIR}certtool --generate-self-signed --load-privkey ssl/ca_key.pem \
-        --template ssl/ca.cfg --outfile ssl/ca_cert.pem
+# create test directory
+if [ -d "ssl" ]; then
+  rm -rf ssl/
+fi
+
+mkdir ssl/
+cp sample_config/ssl/ca.cfg sample_config/ssl/server.cfg ssl/
+
+# Generate self-signed certificate for certificate authority, 
+# that shall sign other certificates
+openssl genpkey -algorithm RSA -out $CA_KEY -pkeyopt rsa_keygen_bits:2048 -quiet
+
+expect -c "
+  spawn openssl req -new -x509 -key $CA_KEY -out $CA_CERT -config $CA_CFG
+  expect \"C \"
+  send \"\r\"
+  expect \"O \"
+  send \"\r\"
+  expect \"CN \"
+  send \"\r\"
+  interact
+"
 
 # Create private key (RSA by default)
-${GNUTLS_BIN_DIR}certtool --generate-privkey --outfile ssl/server_key.pem
+openssl genpkey -algorithm RSA -out $SERVER_KEY -pkeyopt rsa_keygen_bits:2048 -quiet
 
-# Generate certificate using private key
-
-${GNUTLS_BIN_DIR}certtool --generate-certificate --load-privkey ssl/server_key.pem \
-        --load-ca-certificate ssl/ca_cert.pem --load-ca-privkey ssl/ca_key.pem \
-        --template ssl/server.cfg --outfile ssl/server_cert.pem
-
-# Generate Diffie-Hellman parameters (required for DHE-* cipher-suites)
-
-${GNUTLS_BIN_DIR}certtool --generate-dh-params --sec-param normal --outfile ssl/dh.pem
+expect -c "
+  spawn openssl req -CA $CA_CERT -CAkey $CA_KEY -key $SERVER_KEY -out $SERVER_CERT -config $SERVER_CFG
+  expect \"C \"
+  send \"\r\"
+  expect \"ST \"
+  send \"\r\"
+  expect \"L \"
+  send \"\r\"
+  expect \"O \"
+  send \"\r\"
+  expect \"CN \"
+  send \"\r\"
+  interact
+"

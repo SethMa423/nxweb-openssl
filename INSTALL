@@ -17,14 +17,14 @@ cd nxweb-***
 ./configure --without-zlib
   Disable gzip filter even if zlib is present.
 
-./configure --with-gnutls
-  This will configure NXWEB with SSL support. GNUTLS library should be available
+./configure --with-openssl
+  This will configure NXWEB with SSL support. OpenSSL library should be available
   at one of default locations.
 
-  GNUTLS version 3.0.12+ is required.
+  OpenSSL version 3.0.10+ is required.
 
-./configure --with-gnutls=/install-prefix-of-gnutls
-  Specify GNUTLS location explicitly.
+./configure --with-openssl=/install-prefix-of-openssl
+  Specify OpenSSL location explicitly.
 
 ./configure --with-imagemagick
   This will configure NXWEB to use ImageMagick library. ImageMagick should be available

@@ -27,7 +27,7 @@ Before writing NXWEB I evaluated a number of existing light/embeddable web serve
 * decent HTTP protocol handling
 * keep-alive connections
 * chunked requests and responses
-* **SSL support** (via GNUTLS)
+* **SSL support** (via OpenSSl)
 * **HTTP proxy** (with keep-alive connection pooling)
 * **file cache** for proxied content and custom handlers' output
 * cached content can be served when backend is unavailable

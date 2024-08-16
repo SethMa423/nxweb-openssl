@@ -583,8 +583,8 @@ static void nxweb_http_server_connection_init(nxweb_http_server_connection* conn
 #ifdef WITH_SSL
   nxweb_server_listen_config* lconf=&nxweb_server_config.listen_config[conn->lconf_idx];
   if (lconf->secure) {
-    conn->secure=1;
-    nxd_ssl_server_socket_init(&conn->sock, lconf->x509_cred, lconf->priority_cache, &lconf->session_ticket_key);
+    conn->secure = 1;
+    nxd_ssl_server_socket_init(&conn->sock, lconf->ctx);
   }
   else {
     nxd_socket_init((nxd_socket*)&conn->sock);
@@ -976,8 +976,10 @@ int nxweb_listen_ssl(const char* host_and_port, int backlog, _Bool secure, const
 #ifdef WITH_SSL
   lconf->secure=secure;
   if (secure) {
-    if (nxd_ssl_socket_init_server_parameters(&lconf->x509_cred, &lconf->dh_params, &lconf->priority_cache,
-            &lconf->session_ticket_key, cert_file, key_file, dh_params_file, cipher_priority_string)==-1) return -1;
+    if (nxd_ssl_socket_init_server_parameters(&lconf->ctx, cert_file, key_file, dh_params_file,
+                                              cipher_priority_string) == -1) {
+      nxweb_log_error("nxweb init server pararmeters failed");
+      return -1;
   }
 #endif // WITH_SSL
   return 0;
@@ -1106,8 +1108,8 @@ void nxweb_run() {
     if (lconf->listen_fd) {
       close(lconf->listen_fd);
 #ifdef WITH_SSL
-      if (lconf->secure)
-        nxd_ssl_socket_finalize_server_parameters(lconf->x509_cred, lconf->dh_params, lconf->priority_cache, &lconf->session_ticket_key);
+      if (lconf->secure) {
+        nxd_ssl_socket_finalize_server_parameters(lconf->ctx);
 #endif // WITH_SSL
     }
   }
